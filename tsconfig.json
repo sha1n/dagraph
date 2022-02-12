@@ -1,0 +1,29 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declarationDir": "./dist/types",
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "experimentalDecorators":true,
+    "emitDecoratorMetadata": true,
+    "strictFunctionTypes": true,
+    "declaration": true,
+    "lib": [
+      "ES2015"
+    ]
+  },
+  "include": [
+    "./index.ts",
+    "./lib/**/*.ts",
+  ],
+  "exclude": [
+    "./dist/**/*",
+    "node_modules", 
+  ]
+}
