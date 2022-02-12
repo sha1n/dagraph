@@ -156,9 +156,33 @@ describe('DAGraph', () => {
       const expected = [node5, node4, node3, node2, node1];
 
       expect([...dag.reverse().topologicalSort()]).toEqual(expected);
+
+      const myDAG = createDAG<MyThing>();
+      myDAG.addEdge(
+        {
+          id: 'a',
+          name: 'my thing',
+          doSomething: () => {
+            console.log('A');
+          }
+        },
+        {
+          id: 'b',
+          name: 'my other thing',
+          doSomething: () => {
+            console.log('B');
+          }
+        }
+      );
     });
   });
 });
+
+type MyThing = {
+  id: string;
+  name: string;
+  doSomething(): void;
+};
 
 function aNode(): Identifiable {
   return { id: uuid() };
