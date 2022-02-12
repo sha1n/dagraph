@@ -5,6 +5,8 @@ A direct acyclic graph implementation
 - [DAGraph](#dagraph)
   - [Features](#features)
   - [Usage](#usage)
+    - [Basic](#basic)
+    - [Custom Objects](#custom-objects)
   - [Install](#install)
 
 ## Features
@@ -14,6 +16,8 @@ A direct acyclic graph implementation
 - Reverse graph API
 
 ## Usage
+
+### Basic 
 
 ```ts
 import createDAG from '@sha1n/dagraph';
@@ -28,7 +32,36 @@ dag.addEdge({id : 'd'}, {id : 'b'});
 for (const node of dap.topologicalSort()) {
   ...
 }
+```
 
+### Custom Objects
+```ts
+
+type MyThing = {
+  id: string; // <-- implicitly implements the 'Identifiable' interface
+  name: string;
+  doSomething(): void;
+};
+
+const myThing = {
+    id: 'a',
+    name: 'my thing',
+    doSomething: () => {
+      console.log('A');
+    }
+  };
+
+const myOtherThing = {
+    id: 'b',
+    name: 'my other thing',
+    doSomething: () => {
+      console.log('B');
+    }
+  };
+
+const myDAG = createDAG<MyThing>();
+
+myDAG.addEdge(myThing, myOtherThing);
 ```
 
 ## Install
