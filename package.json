@@ -15,12 +15,10 @@
   ],
   "scripts": {
     "clean": "rm -rf ./dist",
-    "prebuild": "yarn run clean",
     "build": "tsc",
-    "test": "jest --coverage",
+    "test": "DEBUG='error:*' jest --coverage && run lint",
     "lint": "eslint --fix --ext .js,.ts .",
-    "posttest": "yarn run lint",
-    "prepublish": "yarn run build"
+    "prepublish": "run build"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
