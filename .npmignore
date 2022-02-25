@@ -11,3 +11,5 @@ jest-html-reporters-attach
 scripts
 yarn.lock
 .nvmrc
+.yarnrc.yml
+.yarn
