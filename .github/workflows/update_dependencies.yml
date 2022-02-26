@@ -9,7 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: "yarn up -R '*'"
+    - run: 
+        yarn up '*'
+        yarn up -R '*'
+        yarn up '@sha1n/*'
+        yarn up -R '@sha1n/*'
 
     - name: PR
       uses: technote-space/create-pr-action@v2
