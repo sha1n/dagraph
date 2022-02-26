@@ -18,7 +18,7 @@
     "build": "tsc",
     "test": "DEBUG='error:*' jest --coverage && run lint",
     "lint": "eslint --fix --ext .js,.ts .",
-    "prepublish": "run build"
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
