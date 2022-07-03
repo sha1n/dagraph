@@ -161,5 +161,5 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
-export { DAGraph, Identifiable };
+export type { DAGraph, Identifiable };
 export default createDAG;
