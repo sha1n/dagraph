@@ -3,25 +3,16 @@ on:
   pull_request:
     branches:
       - master
-  pull_request_target:
-    branches:
-      - master
-    types:
-      - opened
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ArtiomTr/jest-coverage-report-action@v2
         id: coverage
         with:
           package-manager: yarn
           test-script: yarn jest
           output: report-markdown
+
