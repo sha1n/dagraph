@@ -6,7 +6,7 @@
   "author": "Shai Nagar",
   "license": "MIT",
   "types": "./dist/types/index.d.ts",
-  "exports": "./dist/index.js",
+  "exports": ["./dist/index.js", "./dist/types/index.d.ts"],
   "keywords": [
     "dag",
     "directed-acyclic-graph",
