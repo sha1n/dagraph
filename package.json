@@ -1,12 +1,15 @@
 {
   "name": "@sha1n/dagraph",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Directed acyclic graph utility in TypeScript",
   "repository": "https://github.com/sha1n/dagraph",
   "author": "Shai Nagar",
   "license": "MIT",
   "types": "./dist/types/index.d.ts",
-  "exports": ["./dist/index.js", "./dist/types/index.d.ts"],
+  "exports": [
+    "./dist/index.js",
+    "./dist/types/index.d.ts"
+  ],
   "keywords": [
     "dag",
     "directed-acyclic-graph",
