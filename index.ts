@@ -112,6 +112,66 @@ class DAGraph<T extends Identifiable> {
     return reverseGraph;
   }
 
+  /**
+   * Returns a string representation of the graph structure in a tree-like format.
+   *
+   * @param labelFn optional function to generate a label for each node. Defaults to node.id.
+   * @returns a string representing the graph.
+   */
+  print(labelFn: (n: T) => string = n => n.id): string {
+    const lines: string[] = [];
+    const outgoing = new Map<string, string[]>();
+
+    for (const node of this.nodesById.values()) {
+      for (const depId of node.dependencies) {
+        let children = outgoing.get(depId);
+        if (!children) {
+          children = [];
+          outgoing.set(depId, children);
+        }
+        children.push(node.id);
+      }
+    }
+
+    const sortNodes = (aId: string, bId: string) => {
+      const aNode = this.nodesById.get(aId);
+      const bNode = this.nodesById.get(bId);
+      if (!aNode || !bNode) {
+        throw new Error('Node not found in graph');
+      }
+      return labelFn(aNode.data).localeCompare(labelFn(bNode.data));
+    };
+
+    const visit = (nodeId: string, prefix: string) => {
+      const children = outgoing.get(nodeId) || [];
+      children.sort(sortNodes);
+
+      children.forEach((childId, index) => {
+        const isLast = index === children.length - 1;
+        const childNode = this.nodesById.get(childId);
+        if (!childNode) {
+          throw new Error('Node not found in graph');
+        }
+        const label = labelFn(childNode.data);
+        const connector = isLast ? '└── ' : '├── ';
+
+        lines.push(`${prefix}${connector}${label}`);
+
+        const childPrefix = prefix + (isLast ? '    ' : '│   ');
+        visit(childId, childPrefix);
+      });
+    };
+
+    const roots = [...this.roots()].sort((a, b) => labelFn(a).localeCompare(labelFn(b)));
+
+    roots.forEach(root => {
+      lines.push(labelFn(root));
+      visit(root.id, '');
+    });
+
+    return lines.join('\n');
+  }
+
   private ensureNode(data: T): Node<T> {
     let node = this.nodesById.get(data.id);
     if (node) {
