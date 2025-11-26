@@ -198,7 +198,7 @@ describe('DAGraph', () => {
       dag.addNode(nodeA);
 
       const context = { count: 0 };
-      dag.traverse((_node, _parent, _depth, ctx) => {
+      dag.traverse((_node, _parent, _depth, _index, _total, ctx) => {
         ctx.count++;
       }, context);
 
@@ -234,6 +234,27 @@ describe('DAGraph', () => {
       dag.traverse(node => visited.push(node.id), {});
 
       expect(visited).toIncludeSameMembers(['A', 'B', 'C']);
+    });
+
+    test('should provide index and total siblings count', () => {
+      const dag = createDAG();
+      const a = { id: 'A' };
+      const b = { id: 'B' };
+      const c = { id: 'C' };
+
+      // A -> B
+      // A -> C
+      dag.addEdge(a, b);
+      dag.addEdge(a, c);
+
+      const visits: string[] = [];
+      dag.traverse((node, _parent, _depth, index, total) => {
+        visits.push(`${node.id}(${index}/${total})`);
+      }, {});
+
+      // Roots: A (0/1)
+      // Children of A: B (0/2), C (1/2) - deterministic order due to insertion
+      expect(visits).toIncludeSameMembers(['A(0/1)', 'B(0/2)', 'C(1/2)']);
     });
   });
 });
