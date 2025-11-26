@@ -2,6 +2,8 @@ interface Identifiable {
   readonly id: string;
 }
 
+type DAGVisitor<T, C> = (node: T, parent: T | null, depth: number, context: C) => void;
+
 class Node<T extends Identifiable> {
   constructor(readonly data: T, readonly dependencies = new Set<string>()) {}
 
@@ -113,15 +115,13 @@ class DAGraph<T extends Identifiable> {
   }
 
   /**
-   * Returns a string representation of the graph structure in a tree-like format.
+   * Traverses the graph in depth-first order and calls the visitor function for each node.
    *
-   * @param labelFn optional function to generate a label for each node. Defaults to node.id.
-   * @returns a string representing the graph.
+   * @param visitor the visitor function to call for each node.
+   * @param context the context object to pass to the visitor.
    */
-  print(labelFn: (n: T) => string = n => n.id): string {
-    const lines: string[] = [];
+  traverse<C>(visitor: DAGVisitor<T, C>, context: C): void {
     const outgoing = new Map<string, string[]>();
-
     for (const node of this.nodesById.values()) {
       for (const depId of node.dependencies) {
         let children = outgoing.get(depId);
@@ -133,43 +133,24 @@ class DAGraph<T extends Identifiable> {
       }
     }
 
-    const sortNodes = (aId: string, bId: string) => {
-      const aNode = this.nodesById.get(aId);
-      const bNode = this.nodesById.get(bId);
-      if (!aNode || !bNode) {
-        throw new Error('Node not found in graph');
+    const visitNode = (nodeId: string, parent: T | null, depth: number) => {
+      const node = this.nodesById.get(nodeId);
+      if (!node) {
+        return;
       }
-      return labelFn(aNode.data).localeCompare(labelFn(bNode.data));
-    };
 
-    const visit = (nodeId: string, prefix: string) => {
+      visitor(node.data, parent, depth, context);
+
       const children = outgoing.get(nodeId) || [];
-      children.sort(sortNodes);
-
-      children.forEach((childId, index) => {
-        const isLast = index === children.length - 1;
-        const childNode = this.nodesById.get(childId);
-        if (!childNode) {
-          throw new Error('Node not found in graph');
-        }
-        const label = labelFn(childNode.data);
-        const connector = isLast ? '└── ' : '├── ';
-
-        lines.push(`${prefix}${connector}${label}`);
-
-        const childPrefix = prefix + (isLast ? '    ' : '│   ');
-        visit(childId, childPrefix);
-      });
+      for (const childId of children) {
+        visitNode(childId, node.data, depth + 1);
+      }
     };
 
-    const roots = [...this.roots()].sort((a, b) => labelFn(a).localeCompare(labelFn(b)));
-
-    roots.forEach(root => {
-      lines.push(labelFn(root));
-      visit(root.id, '');
-    });
-
-    return lines.join('\n');
+    const roots = [...this.roots()];
+    for (const root of roots) {
+      visitNode(root.id, null, 0);
+    }
   }
 
   private ensureNode(data: T): Node<T> {
@@ -221,6 +202,6 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
-export type { DAGraph, Identifiable };
+export type { DAGraph, Identifiable, DAGVisitor };
 export default createDAG;
 export { createDAG };

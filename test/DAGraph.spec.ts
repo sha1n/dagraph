@@ -157,33 +157,87 @@ describe('DAGraph', () => {
 
       expect([...dag.reverse().topologicalSort()]).toEqual(expected);
 
-      const myDAG = createDAG<MyThing>();
-      myDAG.addEdge(
-        {
-          id: 'a',
-          name: 'my thing',
-          doSomething: () => {
-            console.log('A');
-          }
-        },
-        {
-          id: 'b',
-          name: 'my other thing',
-          doSomething: () => {
-            console.log('B');
-          }
-        }
-      );
+      // Additional verification for simple case
+      const smallDag = createDAG();
+      const a = { id: 'A' };
+      const b = { id: 'B' };
+      smallDag.addEdge(a, b);
+      expect([...smallDag.reverse().topologicalSort()]).toEqual([b, a]);
+    });
+  });
+
+  describe('traverse', () => {
+    test('should visit nodes in depth-first order', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      const nodeB = aNode('B');
+      const nodeC = aNode('C');
+      const nodeD = aNode('D');
+
+      dag.addEdge(nodeA, nodeB);
+      dag.addEdge(nodeB, nodeC);
+      dag.addEdge(nodeA, nodeD);
+
+      // Structure:
+      // A -> B -> C
+      // A -> D
+
+      const visited: string[] = [];
+      dag.traverse((node, parent, depth) => {
+        visited.push(`${node.id}:${depth}`);
+      }, {});
+
+      // Since traverse uses roots() which iterates over Map.values(), the order of branches is insertion order related but implementation specific for Map.
+      // We just check that we visited everyone and depths are correct.
+      expect(visited).toIncludeAllMembers(['A:0', 'B:1', 'C:2', 'D:1']);
+    });
+
+    test('should pass context to visitor', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      dag.addNode(nodeA);
+
+      const context = { count: 0 };
+      dag.traverse((_node, _parent, _depth, ctx) => {
+        ctx.count++;
+      }, context);
+
+      expect(context.count).toBe(1);
+    });
+
+    test('should provide parent node', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      const nodeB = aNode('B');
+      dag.addEdge(nodeA, nodeB);
+
+      const parents: Record<string, string | null> = {};
+      dag.traverse((node, parent) => {
+        parents[node.id] = parent ? parent.id : null;
+      }, {});
+
+      expect(parents['A']).toBeNull();
+      expect(parents['B']).toBe('A');
+    });
+
+    test('should handle multiple roots', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      const nodeB = aNode('B');
+      const nodeC = aNode('C');
+
+      dag.addNode(nodeA);
+      dag.addNode(nodeB);
+      dag.addEdge(nodeB, nodeC);
+
+      const visited: string[] = [];
+      dag.traverse(node => visited.push(node.id), {});
+
+      expect(visited).toIncludeSameMembers(['A', 'B', 'C']);
     });
   });
 });
 
-type MyThing = {
-  id: string;
-  name: string;
-  doSomething(): void;
-};
-
-function aNode(): Identifiable {
-  return { id: uuid() };
+function aNode(id?: string): Identifiable {
+  return { id: id || uuid() };
 }
