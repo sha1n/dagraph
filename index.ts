@@ -2,6 +2,8 @@ interface Identifiable {
   readonly id: string;
 }
 
+type DAGVisitor<T, C> = (node: T, parent: T | null, depth: number, index: number, total: number, context: C) => void;
+
 class Node<T extends Identifiable> {
   constructor(readonly data: T, readonly dependencies = new Set<string>()) {}
 
@@ -112,6 +114,52 @@ class DAGraph<T extends Identifiable> {
     return reverseGraph;
   }
 
+  /**
+   * Traverses the graph in depth-first order and calls the visitor function for each node.
+   *
+   * @param visitor the visitor function to call for each node. The visitor signature is:
+   *                (node: T, parent: T | null, depth: number, index: number, total: number, context: C) => void
+   *                - node: the current node data
+   *                - parent: the parent node data (null for roots)
+   *                - depth: the depth of the current node (0 for roots)
+   *                - index: the index of the current node among its siblings
+   *                - total: the total number of siblings
+   *                - context: the context object passed to traverse
+   * @param context the context object to pass to the visitor.
+   */
+  traverse<C>(visitor: DAGVisitor<T, C>, context: C): void {
+    const outgoing = new Map<string, string[]>();
+    for (const node of this.nodesById.values()) {
+      for (const depId of node.dependencies) {
+        let children = outgoing.get(depId);
+        if (!children) {
+          children = [];
+          outgoing.set(depId, children);
+        }
+        children.push(node.id);
+      }
+    }
+
+    const visitNode = (nodeId: string, parent: T | null, depth: number, index: number, total: number) => {
+      const node = this.nodesById.get(nodeId);
+      if (!node) {
+        return;
+      }
+
+      visitor(node.data, parent, depth, index, total, context);
+
+      const children = outgoing.get(nodeId) || [];
+      children.forEach((childId, i) => {
+        visitNode(childId, node.data, depth + 1, i, children.length);
+      });
+    };
+
+    const roots = [...this.roots()];
+    roots.forEach((root, i) => {
+      visitNode(root.id, null, 0, i, roots.length);
+    });
+  }
+
   private ensureNode(data: T): Node<T> {
     let node = this.nodesById.get(data.id);
     if (node) {
@@ -161,6 +209,6 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
-export type { DAGraph, Identifiable };
+export type { DAGraph, Identifiable, DAGVisitor };
 export default createDAG;
 export { createDAG };
