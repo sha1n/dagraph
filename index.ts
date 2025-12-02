@@ -2,7 +2,28 @@ interface Identifiable {
   readonly id: string;
 }
 
-type DAGVisitor<T, C> = (node: T, parent: T | null, depth: number, index: number, total: number, context: C) => void;
+/**
+ * Represents the state of the traversal at the current node.
+ */
+interface TraversalState<T> {
+  /** The parent node from which the current node was reached. Null for root nodes. */
+  readonly parent: T | null;
+  /** The depth of the current node in the traversal (0 for roots). */
+  readonly depth: number;
+  /** The index of the current node among its siblings (children of the same parent). */
+  readonly index: number;
+  /** The total number of siblings (children of the same parent). */
+  readonly total: number;
+}
+
+/**
+ * A visitor function called for each node during traversal.
+ *
+ * @param node The current node data.
+ * @param state The state of the traversal at the current node.
+ * @param context The context object passed to traverse.
+ */
+type DAGVisitor<T, C> = (node: T, state: TraversalState<T>, context: C) => void;
 
 class Node<T extends Identifiable> {
   constructor(readonly data: T, readonly dependencies = new Set<string>()) {}
@@ -116,15 +137,14 @@ class DAGraph<T extends Identifiable> {
 
   /**
    * Traverses the graph in depth-first order and calls the visitor function for each node.
+   * Siblings (nodes sharing the same parent) are visited in the order they were added`.
    *
-   * @param visitor the visitor function to call for each node. The visitor signature is:
-   *                (node: T, parent: T | null, depth: number, index: number, total: number, context: C) => void
-   *                - node: the current node data
-   *                - parent: the parent node data (null for roots)
-   *                - depth: the depth of the current node (0 for roots)
-   *                - index: the index of the current node among its siblings
-   *                - total: the total number of siblings
-   *                - context: the context object passed to traverse
+   * Note: This traversal behaves like a tree expansion. If a node is reachable via multiple paths
+   * (e.g., a "diamond" structure), it will be visited multiple times—once for each path reaching it.
+   *
+   *
+   *
+   * @param visitor the visitor function to call for each node.
    * @param context the context object to pass to the visitor.
    */
   traverse<C>(visitor: DAGVisitor<T, C>, context: C): void {
@@ -146,7 +166,7 @@ class DAGraph<T extends Identifiable> {
         return;
       }
 
-      visitor(node.data, parent, depth, index, total, context);
+      visitor(node.data, { parent, depth, index, total }, context);
 
       const children = outgoing.get(nodeId) || [];
       children.forEach((childId, i) => {
@@ -209,6 +229,6 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
-export type { DAGraph, Identifiable, DAGVisitor };
+export type { DAGraph, Identifiable, DAGVisitor, TraversalState };
 export default createDAG;
 export { createDAG };
