@@ -51,5 +51,10 @@
   "packageManager": "yarn@3.2.0",
   "engines": {
     "node": ">= 24"
+  },
+  "resolutions": {
+    "json5": "^2.2.3",
+    "socks": "^2.8.3",
+    "js-yaml": "^4.1.1"
   }
 }
