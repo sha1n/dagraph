@@ -111,10 +111,6 @@ class DAGraph<T extends Identifiable> {
       }
     }
 
-    if (!reverseGraph.isAcyclic()) {
-      throw new Error('Reverse graph resulted in a cycle, which is unexpected');
-    }
-
     return reverseGraph;
   }
 
