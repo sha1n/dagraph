@@ -102,11 +102,17 @@ class DAGraph<T extends Identifiable> {
 
     for (const node of this.nodesById.values()) {
       reverseGraph.addNode(node.data);
-      for (const dependency of node.dependencies) {
-        const depData = this.nodesById.get(dependency).data;
-        reverseGraph.addNode(depData);
-        reverseGraph.addEdge(node.data, depData);
+    }
+
+    for (const node of this.nodesById.values()) {
+      for (const dependencyId of node.dependencies) {
+        const dependencyNode = reverseGraph.nodesById.get(dependencyId);
+        dependencyNode.dependencies.add(node.id);
       }
+    }
+
+    if (!reverseGraph.isAcyclic()) {
+      throw new Error('Reverse graph resulted in a cycle, which is unexpected');
     }
 
     return reverseGraph;
