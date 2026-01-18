@@ -39,7 +39,7 @@ class DAGraph<T extends Identifiable> {
     toNode.dependencies.add(fromNode.id);
 
     if (!this.isAcyclic()) {
-      throw new Error();
+      throw new Error(`[${from.id}] -> [${to.id}] form a cycle`);
     }
 
     return this;
