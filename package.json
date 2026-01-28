@@ -1,6 +1,6 @@
 {
   "name": "@sha1n/dagraph",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "commonjs",
   "description": "Directed acyclic graph utility in TypeScript",
   "repository": "https://github.com/sha1n/dagraph",
@@ -20,9 +20,9 @@
   "scripts": {
     "clean": "rm -rf ./dist",
     "build": "tsc",
-    "test": "DEBUG='error:*' jest --coverage && run lint",
+    "test": "DEBUG='error:*' jest --coverage && pnpm lint",
     "lint": "eslint --fix --ext .js,.ts .",
-    "prepare": "npm run build"
+    "prepare": "pnpm run build"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
@@ -48,7 +48,11 @@
     "typescript": "^4.9.5",
     "uuid": "^8.3.2"
   },
-  "packageManager": "yarn@3.2.0",
+  "packageManager": "pnpm@10.28.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">= 24"
   },
