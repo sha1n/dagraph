@@ -1,13 +1,13 @@
 export default {
   testMatch: ['**/test/**/*.spec.ts'],
-  roots: ['./test'],
-  coveragePathIgnorePatterns: ['test/*'],
+  roots: ['<rootDir>'],
+  collectCoverage: true,
+  collectCoverageFrom: ['index.ts'],
+  coveragePathIgnorePatterns: ['/node_modules/', '/test/', '/dist/'],
+  coverageReporters: ['text', 'lcov', 'json'],
   reporters: ['default', ['jest-summary-reporter', { failuresOnly: true }], ['jest-html-reporters', {}]],
   verbose: true,
   maxWorkers: '100%',
-  transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
-  },
   testEnvironment: 'node',
   preset: 'ts-jest',
   slowTestThreshold: 1.5 * 1000,
