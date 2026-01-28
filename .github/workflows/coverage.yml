@@ -13,13 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v4
       - uses: ArtiomTr/jest-coverage-report-action@v2
         id: coverage
         with:
-          package-manager: yarn
-          test-script: yarn jest
+          package-manager: pnpm
+          test-script: pnpm jest
           output: report-markdown
-
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
