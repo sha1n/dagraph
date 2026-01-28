@@ -1,5 +1,6 @@
 [![CI](https://github.com/sha1n/dagraph/actions/workflows/ci.yml/badge.svg)](https://github.com/sha1n/dagraph/actions/workflows/ci.yml)
 [![Coverage](https://github.com/sha1n/dagraph/actions/workflows/coverage.yml/badge.svg)](https://github.com/sha1n/dagraph/actions/workflows/coverage.yml)
+[![codecov](https://codecov.io/gh/sha1n/dagraph/graph/badge.svg?token=TO3WOMYR2U)](https://codecov.io/gh/sha1n/dagraph)
 ![GitHub](https://img.shields.io/github/license/sha1n/dagraph)
 ![npm type definitions](https://img.shields.io/npm/types/@sha1n/dagraph)
 ![npm](https://img.shields.io/npm/v/@sha1n/dagraph)
