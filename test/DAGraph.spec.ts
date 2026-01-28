@@ -1,6 +1,6 @@
 import 'jest-extended';
 import { v4 as uuid } from 'uuid';
-import createDAG, { Identifiable } from '..';
+import createDAG, { Identifiable } from '../index';
 
 describe('DAGraph', () => {
   describe('addEdge', function () {
