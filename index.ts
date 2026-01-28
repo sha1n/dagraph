@@ -2,6 +2,29 @@ interface Identifiable {
   readonly id: string;
 }
 
+/**
+ * Represents the state of the traversal at the current node.
+ */
+interface TraversalState<T> {
+  /** The parent node from which the current node was reached. Null for root nodes. */
+  readonly parent: T | null;
+  /** The depth of the current node in the traversal (0 for roots). */
+  readonly depth: number;
+  /** The index of the current node among its siblings (children of the same parent). */
+  readonly index: number;
+  /** The total number of siblings (children of the same parent). */
+  readonly total: number;
+}
+
+/**
+ * A visitor function called for each node during traversal.
+ *
+ * @param node The current node data.
+ * @param state The state of the traversal at the current node.
+ * @param context The context object passed to traverse.
+ */
+type DAGVisitor<T, C> = (node: T, state: TraversalState<T>, context: C) => void;
+
 class Node<T extends Identifiable> {
   constructor(readonly data: T, readonly dependencies = new Set<string>()) {}
 
@@ -114,6 +137,51 @@ class DAGraph<T extends Identifiable> {
     return reverseGraph;
   }
 
+  /**
+   * Traverses the graph in depth-first order and calls the visitor function for each node.
+   * Siblings (nodes sharing the same parent) are visited in the order they were added`.
+   *
+   * Note: This traversal behaves like a tree expansion. If a node is reachable via multiple paths
+   * (e.g., a "diamond" structure), it will be visited multiple times—once for each path reaching it.
+   *
+   *
+   *
+   * @param visitor the visitor function to call for each node.
+   * @param context the context object to pass to the visitor.
+   */
+  traverse<C>(visitor: DAGVisitor<T, C>, context: C): void {
+    const outgoing = new Map<string, string[]>();
+    for (const node of this.nodesById.values()) {
+      for (const depId of node.dependencies) {
+        let children = outgoing.get(depId);
+        if (!children) {
+          children = [];
+          outgoing.set(depId, children);
+        }
+        children.push(node.id);
+      }
+    }
+
+    const visitNode = (nodeId: string, parent: T | null, depth: number, index: number, total: number) => {
+      const node = this.nodesById.get(nodeId);
+      if (!node) {
+        return;
+      }
+
+      visitor(node.data, { parent, depth, index, total }, context);
+
+      const children = outgoing.get(nodeId) || [];
+      children.forEach((childId, i) => {
+        visitNode(childId, node.data, depth + 1, i, children.length);
+      });
+    };
+
+    const roots = [...this.roots()];
+    roots.forEach((root, i) => {
+      visitNode(root.id, null, 0, i, roots.length);
+    });
+  }
+
   private ensureNode(data: T): Node<T> {
     let node = this.nodesById.get(data.id);
     if (node) {
@@ -163,6 +231,6 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
-export type { DAGraph, Identifiable };
+export type { DAGraph, Identifiable, DAGVisitor, TraversalState };
 export default createDAG;
 export { createDAG };
