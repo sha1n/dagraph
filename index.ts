@@ -231,6 +231,7 @@ function createDAG<T extends Identifiable>(): DAGraph<T> {
   return new DAGraph<T>();
 }
 
+export * from './lib/visitors';
 export type { DAGraph, Identifiable, DAGVisitor, TraversalState };
 export default createDAG;
 export { createDAG };
