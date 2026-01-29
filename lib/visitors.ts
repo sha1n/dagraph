@@ -11,7 +11,7 @@ export function createPrintVisitor<T extends Identifiable>(
   labelFn: (n: T) => string = n => n.id,
   indent = '  '
 ): DAGVisitor<T, string[]> {
-  return (node, _parent, depth, _index, _total, lines) => {
+  return (node, { depth }, lines) => {
     lines.push(`${indent.repeat(depth)}${labelFn(node)}`);
   };
 }
@@ -28,7 +28,7 @@ export function createTreeVisitor<T extends Identifiable>(
 ): DAGVisitor<T, string[]> {
   const isLastChild: boolean[] = [];
 
-  return (node, _parent, depth, index, total, lines) => {
+  return (node, { depth, index, total }, lines) => {
     const isLast = index === total - 1;
     isLastChild[depth] = isLast;
 

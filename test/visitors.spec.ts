@@ -1,4 +1,5 @@
-import createDAG, { createPrintVisitor, createTreeVisitor } from '..';
+import createDAG from '..';
+import { createPrintVisitor, createTreeVisitor } from '../lib/visitors';
 
 describe('visitors', () => {
   describe('createPrintVisitor', () => {
