@@ -1,6 +1,6 @@
 import 'jest-extended';
 import { v4 as uuid } from 'uuid';
-import createDAG, { Identifiable } from '..';
+import createDAG, { Identifiable } from '../index';
 
 describe('DAGraph', () => {
   describe('addEdge', function () {
@@ -159,10 +159,205 @@ describe('DAGraph', () => {
 
       // Additional verification for simple case
       const smallDag = createDAG();
-      const a = { id: 'A' };
-      const b = { id: 'B' };
+      const a = aNode('A');
+      const b = aNode('B');
       smallDag.addEdge(a, b);
       expect([...smallDag.reverse().topologicalSort()]).toEqual([b, a]);
+    });
+  });
+
+  describe('traverse', () => {
+    test('should visit nodes in depth-first order', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      const nodeB = aNode('B');
+      const nodeC = aNode('C');
+      const nodeD = aNode('D');
+
+      // A -> B -> C
+      // A -> D
+      dag.addEdge(nodeA, nodeB);
+      dag.addEdge(nodeB, nodeC);
+      dag.addEdge(nodeA, nodeD);
+
+      const visited: string[] = [];
+      dag.traverse((node, { depth }) => {
+        visited.push(`${node.id}(depth=${depth})`);
+      }, {});
+
+      // Since traverse uses roots() which iterates over Map.values(), the order of branches is insertion order related but implementation specific for Map.
+      // We just check that we visited everyone and depths are correct.
+      expect(visited).toIncludeAllMembers(['A(depth=0)', 'B(depth=1)', 'C(depth=2)', 'D(depth=1)']);
+    });
+
+    test('should pass context to visitor', () => {
+      const dag = createDAG();
+      const nodeA = aNode('A');
+      dag.addNode(nodeA);
+
+      const context = { count: 0 };
+      dag.traverse((_node, _state, ctx) => {
+        ctx.count++;
+      }, context);
+
+      expect(context.count).toBe(1);
+    });
+
+    test('should visit nodes multiple times for multiple paths (diamond)', () => {
+      const dag = createDAG();
+      const a = aNode('A');
+      const b = aNode('B');
+      const c = aNode('C');
+      const d = aNode('D');
+
+      // A -> B -> D
+      // A -> C -> D
+      dag.addEdge(a, b);
+      dag.addEdge(b, d);
+      dag.addEdge(a, c);
+      dag.addEdge(c, d);
+
+      const visited: string[] = [];
+      dag.traverse((node, { parent }) => {
+        visited.push(`${node.id} (parent: ${parent?.id})`);
+      }, {});
+
+      // D should be visited twice, once from B and once from C
+      expect(visited).toIncludeAllMembers([
+        'A (parent: undefined)',
+        'B (parent: A)',
+        'D (parent: B)',
+        'C (parent: A)',
+        'D (parent: C)'
+      ]);
+      expect(visited.filter(v => v.startsWith('D'))).toHaveLength(2);
+    });
+
+    test('should do nothing for an empty graph', () => {
+      const dag = createDAG();
+      const visited: string[] = [];
+      dag.traverse(node => visited.push(node.id), {});
+      expect(visited).toBeEmpty();
+    });
+
+    test('should visit all nodes in a disconnected graph', () => {
+      const dag = createDAG();
+      const a = aNode('A');
+      const b = aNode('B');
+      const c = aNode('C');
+
+      dag.addNode(a);
+      dag.addNode(b);
+      dag.addNode(c);
+
+      const visited: string[] = [];
+      dag.traverse(node => visited.push(node.id), {});
+
+      expect(visited).toIncludeSameMembers(['A', 'B', 'C']);
+    });
+
+    test('should visit siblings in insertion order', () => {
+      const dag = createDAG();
+      const root = aNode('Root');
+      const c1 = aNode('C1');
+      const c2 = aNode('C2');
+      const c3 = aNode('C3');
+
+      dag.addEdge(root, c2);
+      dag.addEdge(root, c1);
+      dag.addEdge(root, c3);
+
+      const children: string[] = [];
+      dag.traverse((node, { parent }) => {
+        if (parent?.id === 'Root') {
+          children.push(node.id);
+        }
+      }, {});
+
+      expect(children).toEqual(['C2', 'C1', 'C3']);
+    });
+
+    describe('TraversalState', () => {
+      test('should provide correct parent node', () => {
+        const dag = createDAG();
+        const nodeA = aNode('A');
+        const nodeB = aNode('B');
+        dag.addEdge(nodeA, nodeB);
+
+        const parents: Record<string, string | null> = {};
+        dag.traverse((node, { parent }) => {
+          parents[node.id] = parent ? parent.id : null;
+        }, {});
+
+        expect(parents['A']).toBeNull();
+        expect(parents['B']).toBe('A');
+      });
+
+      test('should provide correct index and total for multiple roots', () => {
+        const dag = createDAG();
+        const nodeA = aNode('A');
+        const nodeB = aNode('B');
+        const nodeC = aNode('C');
+
+        dag.addNode(nodeA);
+        dag.addNode(nodeB);
+        dag.addEdge(nodeB, nodeC);
+
+        const visited: string[] = [];
+        dag.traverse((node, { index, total }) => {
+          visited.push(`${node.id}(idx=${index}, total=${total})`);
+        }, {});
+
+        expect(visited).toIncludeSameMembers(['A(idx=0, total=2)', 'B(idx=1, total=2)', 'C(idx=0, total=1)']);
+      });
+
+      test('should provide correct index and total siblings count', () => {
+        const dag = createDAG();
+        const a = aNode('A');
+        const b = aNode('B');
+        const c = aNode('C');
+
+        // A -> B
+        // A -> C
+        dag.addEdge(a, b);
+        dag.addEdge(a, c);
+        dag.addEdge(b, c);
+
+        const visits: string[] = [];
+        dag.traverse((node, { index, total }) => {
+          visits.push(`${node.id}(idx=${index}, total=${total})`);
+        }, {});
+
+        // Roots: A (idx=0, total=1)
+        // Children of A: B (idx=0, total=2), C (idx=1, total=2) - deterministic order due to insertion
+        expect(visits).toIncludeSameMembers([
+          'A(idx=0, total=1)',
+          'B(idx=0, total=2)',
+          'C(idx=0, total=1)',
+          'C(idx=1, total=2)'
+        ]);
+      });
+
+      test('should provide correct depth', () => {
+        const dag = createDAG();
+        const a = aNode('A');
+        const b = aNode('B');
+        const c = aNode('C');
+
+        // A -> B -> C (depth 2)
+        // A -> C (depth 1)
+        dag.addEdge(a, b);
+        dag.addEdge(b, c);
+        dag.addEdge(a, c);
+
+        const visits: string[] = [];
+        dag.traverse((node, { depth }) => {
+          visits.push(`${node.id}(depth=${depth})`);
+        }, {});
+
+        // C should be visited twice: once at depth 2 (via B) and once at depth 1 (direct from A)
+        expect(visits).toIncludeAllMembers(['A(depth=0)', 'B(depth=1)', 'C(depth=2)', 'C(depth=1)']);
+      });
     });
   });
 

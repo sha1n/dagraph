@@ -1,22 +1,28 @@
 name: 'Coverage'
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
 
 jobs:
   coverage:
-    permissions:
-      checks: write
-      pull-requests: write
-      contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: ArtiomTr/jest-coverage-report-action@v2
-        id: coverage
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          package-manager: yarn
-          test-script: yarn jest
-          output: report-markdown
-
+          node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v4
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests with coverage
+        run: pnpm jest --coverage
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
