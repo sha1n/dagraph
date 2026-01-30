@@ -1,5 +1,4 @@
-import createDAG from '..';
-import { createPrintVisitor, createTreeVisitor } from '../lib/visitors';
+import createDAG, { createIndentFormatter, createTreeAsciiFormatter } from '..';
 
 describe('visitors', () => {
   describe('createPrintVisitor', () => {
@@ -14,7 +13,7 @@ describe('visitors', () => {
       dag.addEdge(b, c);
 
       const lines: string[] = [];
-      dag.traverse(createPrintVisitor(), lines);
+      dag.traverse(createIndentFormatter(), lines);
 
       expect(lines).toEqual(['A', '  B', '    C']);
     });
@@ -28,7 +27,7 @@ describe('visitors', () => {
 
       const lines: string[] = [];
       dag.traverse(
-        createPrintVisitor(n => n.id, '----'),
+        createIndentFormatter(n => n.id, '----'),
         lines
       );
 
@@ -44,7 +43,7 @@ describe('visitors', () => {
 
       const lines: string[] = [];
       dag.traverse(
-        createPrintVisitor(n => `Value: ${n.val}`),
+        createIndentFormatter(n => `Value: ${n.val}`),
         lines
       );
 
@@ -72,7 +71,7 @@ describe('visitors', () => {
       // Children of A: B, D (in that order because B added first)
 
       const lines: string[] = [];
-      dag.traverse(createTreeVisitor(), lines);
+      dag.traverse(createTreeAsciiFormatter(), lines);
 
       const expected = ['A', '├── B', '│   └── C', '└── D', '    └── E'];
 
@@ -93,7 +92,7 @@ describe('visitors', () => {
       // B -> C
 
       const lines: string[] = [];
-      dag.traverse(createTreeVisitor(), lines);
+      dag.traverse(createTreeAsciiFormatter(), lines);
 
       const expected = ['A', 'B', '└── C'];
 
