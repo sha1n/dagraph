@@ -7,7 +7,7 @@ import { Identifiable, DAGVisitor } from '../index';
  * @param indent optional string to use for indentation. Defaults to 2 spaces.
  * @returns a DAGVisitor that pushes lines to the context array.
  */
-export function createPrintVisitor<T extends Identifiable>(
+export function createIndentFormatter<T extends Identifiable>(
   labelFn: (n: T) => string = n => n.id,
   indent = '  '
 ): DAGVisitor<T, string[]> {
@@ -23,7 +23,7 @@ export function createPrintVisitor<T extends Identifiable>(
  * @param labelFn optional function to generate a label for each node. Defaults to node.id.
  * @returns a DAGVisitor that pushes lines to the context array.
  */
-export function createTreeVisitor<T extends Identifiable>(
+export function createTreeAsciiFormatter<T extends Identifiable>(
   labelFn: (n: T) => string = n => n.id
 ): DAGVisitor<T, string[]> {
   const isLastChild: boolean[] = [];
