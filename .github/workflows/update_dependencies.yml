@@ -10,16 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
-    - run: 
-        yarn up '*'
-        yarn up -R '*'
-        yarn up '@sha1n/*'
-        yarn up -R '@sha1n/*'
-
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 10
     - name: PR
       uses: technote-space/create-pr-action@v2
       with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_RO_PUBLIC }}
+        EXECUTE_COMMANDS: pnpm update
         COMMIT_MESSAGE: Updated dependencies
         PR_BRANCH_NAME: automatic_dependency_updates
         PR_TITLE: Update dependencies
-        PR_BODY: Automatic `yarn up` based dependencies update
+        PR_BODY: Automatic `pnpm update` based dependencies update
