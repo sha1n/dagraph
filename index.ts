@@ -26,7 +26,10 @@ interface TraversalState<T> {
 type DAGVisitor<T, C> = (node: T, state: TraversalState<T>, context: C) => void;
 
 class Node<T extends Identifiable> {
-  constructor(readonly data: T, readonly dependencies = new Set<string>()) {}
+  constructor(
+    readonly data: T,
+    readonly dependencies = new Set<string>()
+  ) {}
 
   get id(): string {
     return this.data.id;
