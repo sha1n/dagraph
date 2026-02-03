@@ -13,6 +13,8 @@ A directed acyclic graph (DAG) implementation in TypeScript.
   - [Usage](#usage)
     - [Basic](#basic)
     - [Custom Objects](#custom-objects)
+    - [Visualization](#visualization)
+    - [Custom Traversal](#custom-traversal)
   - [Install](#install)
   - [Development](#development)
 
@@ -77,6 +79,62 @@ const myDAG = createDAG<MyThing>();
 
 // Add nodes explicitly or implicitly via addEdge
 myDAG.addEdge(myThing, myOtherThing); // myThing -> myOtherThing
+```
+
+### Visualization
+
+You can visualize the graph structure using built-in formatters with the `traverse` method.
+
+#### Indented List
+```ts
+import createDAG, { createIndentFormatter } from '@sha1n/dagraph';
+
+const dag = createDAG();
+// ... add nodes and edges ...
+
+const lines: string[] = [];
+dag.traverse(createIndentFormatter(), lines);
+console.log(lines.join('\n'));
+
+// Output example:
+// A
+//   B
+//     C
+```
+
+#### Tree Structure
+```ts
+import createDAG, { createTreeAsciiFormatter } from '@sha1n/dagraph';
+
+const dag = createDAG();
+// ... add nodes and edges ...
+
+const lines: string[] = [];
+dag.traverse(createTreeAsciiFormatter(), lines);
+console.log(lines.join('\n'));
+
+// Output example:
+// A
+// ├── B
+// │   └── C
+// └── D
+//     └── E
+```
+
+### Custom Traversal
+
+The `traverse` method allows you to visit every node in a depth-first manner, effectively expanding the graph into a tree (nodes with multiple parents are visited for each path).
+
+```ts
+import createDAG, { DAGVisitor } from '@sha1n/dagraph';
+
+// ... setup dag ...
+
+const visitor: DAGVisitor<MyType, void> = (node, state, context) => {
+  console.log(`Node: ${node.id}, Depth: ${state.depth}, Parent: ${state.parent?.id}`);
+};
+
+dag.traverse(visitor);
 ```
 
 ## Install
