@@ -14,8 +14,6 @@ jobs:
       with:
         node-version-file: ".nvmrc"
     - uses: pnpm/action-setup@v4
-      with:
-        version: 10
     - name: PR
       uses: technote-space/create-pr-action@v2
       with:
