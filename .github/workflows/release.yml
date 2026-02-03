@@ -53,7 +53,7 @@ jobs:
 
   # Job 2: Publish to npm when a tag is pushed (uses OIDC authentication)
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
