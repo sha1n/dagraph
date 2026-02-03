@@ -1,6 +1,6 @@
 {
   "name": "@sha1n/dagraph",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "commonjs",
   "description": "Directed acyclic graph utility in TypeScript",
   "repository": "https://github.com/sha1n/dagraph",
