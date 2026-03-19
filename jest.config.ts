@@ -9,6 +9,9 @@ export default {
   verbose: true,
   maxWorkers: '100%',
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^uuid$': require.resolve('uuid')
+  },
   preset: 'ts-jest',
   slowTestThreshold: 1.5 * 1000,
   testTimeout: 10 * 1000,
