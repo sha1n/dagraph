@@ -56,6 +56,7 @@
     "node": ">= 24"
   },
   "resolutions": {
+    "handlebars": "^4.7.9",
     "json5": "^2.2.3",
     "socks": "^2.8.3",
     "js-yaml": "^4.1.1"
