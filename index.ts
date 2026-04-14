@@ -3,6 +3,18 @@ interface Identifiable {
 }
 
 /**
+ * Configuration options for DAG creation.
+ */
+interface DAGConfig {
+  /**
+   * Controls when cycle detection runs.
+   * - `'on-add'` (default): checks for cycles on every addEdge call.
+   * - `'manual'`: user must call isAcyclic() explicitly.
+   */
+  readonly cycleDetection?: 'on-add' | 'manual';
+}
+
+/**
  * Represents the state of the traversal at the current node.
  */
 interface TraversalState<T> {
@@ -39,6 +51,11 @@ class Node<T extends Identifiable> {
 class DAGraph<T extends Identifiable> {
   private readonly nodesById = new Map<string, Node<T>>();
   private outgoingById: Map<string, string[]> | null = null;
+  private readonly config: Required<DAGConfig>;
+
+  constructor(config: DAGConfig = {}) {
+    this.config = { cycleDetection: 'on-add', ...config };
+  }
 
   /**
    * Adds the specified identifiable node to the graph.
@@ -65,7 +82,7 @@ class DAGraph<T extends Identifiable> {
 
     toNode.dependencies.add(fromNode.id);
 
-    if (!this.isAcyclic()) {
+    if (this.config.cycleDetection === 'on-add' && !this.isAcyclic()) {
       toNode.dependencies.delete(fromNode.id);
       throw new Error(`[${from.id}] -> [${to.id}] form a cycle`);
     }
@@ -239,7 +256,11 @@ class DAGraph<T extends Identifiable> {
     return node;
   }
 
-  private isAcyclic(): boolean {
+  /**
+   * Returns true if the graph contains no cycles, false otherwise.
+   * Uses Kahn's algorithm (in-degree reduction).
+   */
+  isAcyclic(): boolean {
     const degrees = new Map<string, number>();
     this.nodesById.forEach(node => degrees.set(node.id, 0));
     this.nodesById.forEach(node =>
@@ -274,11 +295,11 @@ class DAGraph<T extends Identifiable> {
   }
 }
 
-function createDAG<T extends Identifiable>(): DAGraph<T> {
-  return new DAGraph<T>();
+function createDAG<T extends Identifiable>(config?: DAGConfig): DAGraph<T> {
+  return new DAGraph<T>(config);
 }
 
 export * from './lib/formatVisitors';
-export type { DAGraph, Identifiable, DAGVisitor, TraversalState };
+export type { DAGraph, DAGConfig, Identifiable, DAGVisitor, TraversalState };
 export default createDAG;
 export { createDAG };
