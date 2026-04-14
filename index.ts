@@ -183,24 +183,32 @@ class DAGraph<T extends Identifiable> {
       }
     }
 
-    const visitNode = (nodeId: string, parent: T | null, depth: number, index: number, total: number) => {
+    type Frame = { nodeId: string; parent: T | null; depth: number; index: number; total: number };
+    const stack: Frame[] = [];
+
+    const roots = [...this.roots()];
+    for (let i = roots.length - 1; i >= 0; i--) {
+      stack.push({ nodeId: roots[i].id, parent: null, depth: 0, index: i, total: roots.length });
+    }
+
+    while (stack.length > 0) {
+      const { nodeId, parent, depth, index, total } = stack.pop();
       const node = this.nodesById.get(nodeId);
-      if (!node) {
-        return;
-      }
+      if (!node) continue;
 
       visitor(node.data, { parent, depth, index, total }, context);
 
       const children = outgoing.get(nodeId) || [];
-      children.forEach((childId, i) => {
-        visitNode(childId, node.data, depth + 1, i, children.length);
-      });
-    };
-
-    const roots = [...this.roots()];
-    roots.forEach((root, i) => {
-      visitNode(root.id, null, 0, i, roots.length);
-    });
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.push({
+          nodeId: children[i],
+          parent: node.data,
+          depth: depth + 1,
+          index: i,
+          total: children.length
+        });
+      }
+    }
   }
 
   private ensureNode(data: T): Node<T> {
