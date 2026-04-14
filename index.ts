@@ -38,6 +38,7 @@ class Node<T extends Identifiable> {
 
 class DAGraph<T extends Identifiable> {
   private readonly nodesById = new Map<string, Node<T>>();
+  private outgoingById: Map<string, string[]> | null = null;
 
   /**
    * Adds the specified identifiable node to the graph.
@@ -67,6 +68,15 @@ class DAGraph<T extends Identifiable> {
     if (!this.isAcyclic()) {
       toNode.dependencies.delete(fromNode.id);
       throw new Error(`[${from.id}] -> [${to.id}] form a cycle`);
+    }
+
+    if (this.outgoingById) {
+      let children = this.outgoingById.get(fromNode.id);
+      if (!children) {
+        children = [];
+        this.outgoingById.set(fromNode.id, children);
+      }
+      children.push(toNode.id);
     }
 
     return this;
@@ -171,17 +181,7 @@ class DAGraph<T extends Identifiable> {
    * @param context the context object to pass to the visitor.
    */
   traverse<C>(visitor: DAGVisitor<T, C>, context: C): void {
-    const outgoing = new Map<string, string[]>();
-    for (const node of this.nodesById.values()) {
-      for (const depId of node.dependencies) {
-        let children = outgoing.get(depId);
-        if (!children) {
-          children = [];
-          outgoing.set(depId, children);
-        }
-        children.push(node.id);
-      }
-    }
+    const outgoing = this.getOutgoing();
 
     type Frame = { nodeId: string; parent: T | null; depth: number; index: number; total: number };
     const stack: Frame[] = [];
@@ -209,6 +209,23 @@ class DAGraph<T extends Identifiable> {
         });
       }
     }
+  }
+
+  private getOutgoing(): Map<string, string[]> {
+    if (!this.outgoingById) {
+      this.outgoingById = new Map<string, string[]>();
+      for (const node of this.nodesById.values()) {
+        for (const depId of node.dependencies) {
+          let children = this.outgoingById.get(depId);
+          if (!children) {
+            children = [];
+            this.outgoingById.set(depId, children);
+          }
+          children.push(node.id);
+        }
+      }
+    }
+    return this.outgoingById;
   }
 
   private ensureNode(data: T): Node<T> {
