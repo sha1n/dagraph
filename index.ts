@@ -214,9 +214,10 @@ class DAGraph<T extends Identifiable> {
     });
 
     let visitedNodeCount = 0;
+    let ptr = 0;
 
-    while (queue.length > 0) {
-      const [nodeId] = queue.splice(0, 1);
+    while (ptr < queue.length) {
+      const nodeId = queue[ptr++];
       visitedNodeCount += 1;
 
       this.nodesById.get(nodeId).dependencies.forEach(child => {
