@@ -78,25 +78,42 @@ class DAGraph<T extends Identifiable> {
    */
   *topologicalSort(): Iterable<T> {
     const nodesById = this.nodesById;
-
     const visited = new Set<string>();
-    const dependenciesOf = function* (node: Node<T>): Iterable<T> {
-      for (const child of node.dependencies || []) {
-        if (!visited.has(child)) {
-          yield* dependenciesOf(nodesById.get(child));
-          yield nodesById.get(child).data;
-          visited.add(child);
-        }
-      }
-    };
+    const result: T[] = [];
+
+    const ENTER = 0;
+    const EXIT = 1;
 
     for (const node of nodesById.values()) {
-      if (!visited.has(node.id)) {
-        yield* dependenciesOf(node);
-        yield node.data;
-        visited.add(node.id);
+      if (visited.has(node.id)) continue;
+
+      const stack: { nodeId: string; action: number }[] = [{ nodeId: node.id, action: ENTER }];
+
+      while (stack.length > 0) {
+        const frame = stack.pop();
+
+        if (frame.action === EXIT) {
+          if (!visited.has(frame.nodeId)) {
+            visited.add(frame.nodeId);
+            result.push(nodesById.get(frame.nodeId).data);
+          }
+          continue;
+        }
+
+        if (visited.has(frame.nodeId)) continue;
+
+        stack.push({ nodeId: frame.nodeId, action: EXIT });
+
+        const deps = [...nodesById.get(frame.nodeId).dependencies];
+        for (let i = deps.length - 1; i >= 0; i--) {
+          if (!visited.has(deps[i])) {
+            stack.push({ nodeId: deps[i], action: ENTER });
+          }
+        }
       }
     }
+
+    yield* result;
   }
 
   /**
