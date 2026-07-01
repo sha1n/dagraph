@@ -4,6 +4,7 @@
     "target": "ES2015",
     "module": "commonjs",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "declarationDir": "./dist/types",
     "outDir": "./dist",
     "skipLibCheck": true,
@@ -16,7 +17,8 @@
     "declaration": true,
     "lib": [
       "ES2015"
-    ]
+    ],
+    "types": ["node", "jest"]
   },
   "include": [
     "./index.ts",

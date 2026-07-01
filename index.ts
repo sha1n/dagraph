@@ -82,8 +82,8 @@ class DAGraph<T extends Identifiable> {
     const dependenciesOf = function* (node: Node<T>): Iterable<T> {
       for (const child of node.dependencies || []) {
         if (!visited.has(child)) {
-          yield* dependenciesOf(nodesById.get(child));
-          yield nodesById.get(child).data;
+          yield* dependenciesOf(nodesById.get(child)!);
+          yield nodesById.get(child)!.data;
           visited.add(child);
         }
       }
@@ -133,7 +133,7 @@ class DAGraph<T extends Identifiable> {
     for (const node of this.nodesById.values()) {
       for (const dependencyId of node.dependencies) {
         const dependencyNode = reverseGraph.nodesById.get(dependencyId);
-        dependencyNode.dependencies.add(node.id);
+        dependencyNode!.dependencies.add(node.id);
       }
     }
 
@@ -201,7 +201,7 @@ class DAGraph<T extends Identifiable> {
     this.nodesById.forEach(node => degrees.set(node.id, 0));
     this.nodesById.forEach(node =>
       node.dependencies.forEach(child => {
-        degrees.set(child, degrees.get(child) + 1);
+        degrees.set(child, degrees.get(child)! + 1);
       })
     );
 
@@ -218,8 +218,8 @@ class DAGraph<T extends Identifiable> {
       const [nodeId] = queue.splice(0, 1);
       visitedNodeCount += 1;
 
-      this.nodesById.get(nodeId).dependencies.forEach(child => {
-        degrees.set(child, degrees.get(child) - 1);
+      this.nodesById.get(nodeId)!.dependencies.forEach(child => {
+        degrees.set(child, degrees.get(child)! - 1);
         if (degrees.get(child) === 0) {
           queue.push(child);
         }
